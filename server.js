@@ -1,9 +1,8 @@
-// server.js - Render Hosting Edition
+// server.js - ንፁህ የደራሽ እቁብ ባክኤንድ ሰርቨር
 const express = require('express');
 const cors = require('cors');
 const app = express();
 
-// Render ራሱ የሚሰጠውን ፖርት እንዲጠቀም ወሳኝ ማስተካከያ
 const PORT = process.env.PORT || 3000;
 
 app.use(cors());
@@ -14,15 +13,12 @@ let pool = [];
 
 app.post('/api/buy-ticket', (req, res) => {
     const { name, amount } = req.body;
-    if (!name || !amount) {
-        return res.status(400).json({ error: "ስም እና የብር መጠን ያስፈልጋል!" });
-    }
+    if (!name || !amount) return res.status(400).json({ error: "መረጃ ጎድሏል!" });
+    
     totalFund += amount;
     let ticketCount = amount / 10;
-    for (let i = 0; i < ticketCount; i++) {
-        pool.push(name);
-    }
-    console.log(`[የአዲስ እጣ] ስም: ${name}, ያዋጣው: ${amount} ETB`);
+    for (let i = 0; i < ticketCount; i++) pool.push(name);
+    
     res.json({ success: true, totalFund });
 });
 
@@ -31,33 +27,25 @@ app.get('/api/status', (req, res) => {
 });
 
 app.post('/api/draw', (req, res) => {
-    if (pool.length < 3) {
-        return res.status(400).json({ error: "እጣ ለመቁረጥ ቢያንስ 3 እጣዎች መሸጥ አለባቸው!" });
-    }
-    let idx1 = Math.floor(Math.random() * pool.length);
-    let winner1 = pool[idx1];
-    let tempPool = pool.filter(name => name !== winner1);
-    let idx2 = Math.floor(Math.random() * tempPool.length);
-    let winner2 = tempPool[idx2];
-    let finalPool = tempPool.filter(name => name !== winner2);
-    let idx3 = Math.floor(Math.random() * finalPool.length);
-    let winner3 = finalPool[idx3];
+    if (pool.length < 3) return res.status(400).json({ error: "ቢያንስ 3 እጣ ያስፈልጋል!" });
+    
+    let winner1 = pool[Math.floor(Math.random() * pool.length)];
+    let temp = pool.filter(n => n !== winner1);
+    let winner2 = temp[Math.floor(Math.random() * temp.length)] || winner1;
+    let finalP = temp.filter(n => n !== winner2);
+    let winner3 = finalP[Math.floor(Math.random() * finalP.length)] || winner2;
 
     const results = {
         winner1, prize1: totalFund * 0.5,
         winner2, prize2: totalFund * 0.3,
         winner3, prize3: totalFund * 0.2
     };
-    totalFund = 0;
-    pool = [];
+    totalFund = 0; pool = [];
     res.json({ success: true, results });
 });
 
-// Render ላይ ሰርቨሩ በጤና መኖሩን ማረጋገጫ (Health Check)
-app.get('/', (req, res) => {
-    res.send("የደራሽ እቁብ ሰርቨር በኢንተርኔት ላይ በተሳካ ሁኔታ እየሰራ ነው!");
-});
+app.get('/', (req, res) => { res.send("ሰርቨር Live ነው!"); });
 
-app.listen(PORT, () => {
-    console.log(`🚀 ሰርቨሩ በፖርት ${PORT} ላይ መስራት ጀምሯል!`);
+app.listen(PORT, () => { 
+    console.log(`🚀 የደራሽ እቁብ ሰርቨር በፖርት ${PORT} ላይ በራ!`); 
 });
